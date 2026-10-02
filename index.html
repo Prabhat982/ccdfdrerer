@@ -192,6 +192,10 @@
                             <button onclick="exportData()" class="flex-1 lg:flex-none bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-900 transition shadow">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Local Backup
                             </button>
+							<label class="flex-1 lg:flex-none bg-teal-600 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold cursor-pointer flex items-center justify-center gap-2 hover:bg-teal-700 transition shadow">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Cloud Restore
+                                <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(event)">
+                            </label>
                         </div>
                     </div>
 
@@ -1199,7 +1203,11 @@
                         store.vendors = data.vendors; store.transactions = data.transactions; store.materials = data.materials || []; store.sales = data.sales || [];
                         await save(); customAlert('Data Restored Successfully! Reloading system...', () => location.reload());
                     }
-                } catch(err) { customAlert('Invalid backup file format.'); }
+                } catch(err) { customAlert('Invalid backup file format.');
+							   console.error(err);
+				}
+				// Reset the file input so you can select the same file again if needed
+                event.target.value = '';
             }; reader.readAsText(file);
         }
 
