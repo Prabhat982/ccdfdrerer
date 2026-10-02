@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+<!-- BLOCK: HEAD & LIBRARIES -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PrabhatShop - Premium Management</title>
-    <!-- BLOCK: CORE LIBRARIES -->
+    <!-- Core libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+    <!-- PDF Generation Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <!-- END BLOCK: CORE LIBRARIES -->
     
+    <!-- BLOCK: CUSTOM CSS -->
     <style>
-        /* BLOCK: STYLES */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         body { font-family: 'Inter', sans-serif; }
         
@@ -25,11 +25,13 @@
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 
+        /* Modern Scrollbar for tables */
         .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
+        /* Print Specific Styles */
         @media print {
             .no-print { display: none !important; }
             body { background-color: white !important; }
@@ -45,12 +47,14 @@
         }
         .print-only-report { display: none; }
         #bill-print-template { display: none; }
-        /* END BLOCK: STYLES */
     </style>
+    <!-- END BLOCK: CUSTOM CSS -->
 </head>
+<!-- END BLOCK: HEAD & LIBRARIES -->
+
 <body class="bg-slate-50 text-slate-800 antialiased h-screen flex flex-col overflow-hidden selection:bg-teal-200 selection:text-teal-900">
 
-    <!-- BLOCK: GLOBAL MODALS -->
+    <!-- BLOCK: MODALS & POPUPS -->
     <!-- Global Custom Modals System -->
     <div id="global-modal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm transform transition-all scale-95 opacity-0" id="global-modal-box">
@@ -119,83 +123,7 @@
             </div>
         </div>
     </div>
-    <!-- END BLOCK: GLOBAL MODALS -->
-
-    <!-- BLOCK: FIREBASE SETUP (FOR GITHUB PAGES CLOUD SYNC) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-		import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-analytics.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // =========================================================================
-        // ⚠️ REPLACE THESE VALUES WITH YOUR FIREBASE CONFIGURATION FOR GITHUB PAGES
-        // =========================================================================
-        const firebaseConfig = {
-			apiKey: "AIzaSyCrj8GZeIXC2FQLpnQFHos91o8P0RKCIks",
-			authDomain: "prabhatshop-fe8a4.firebaseapp.com",
-			projectId: "prabhatshop-fe8a4",
-			storageBucket: "prabhatshop-fe8a4.firebasestorage.app",
-			messagingSenderId: "18165152659",
-			appId: "1:18165152659:web:48f962ae0638a944788666",
-			measurementId: "G-B1QDJ9MCWQ"
-        };
-
-        const isPreview = typeof __firebase_config !== 'undefined';
-        const firebaseConfig = isPreview ? JSON.parse(__firebase_config) : githubFirebaseConfig;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'prabhat-shop-online';
-
-        let app, db, auth, userId;
-
-        window.initCloudDb = async function() {
-            try {
-                // Check if user actually replaced the config for GitHub
-                if(!isPreview && (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("REPLACE"))) {
-                    console.warn("Firebase config missing. Using local offline storage instead.");
-                    window.useLocalFallback = true;
-                    await window.loadDataLocal();
-                    return true; 
-                }
-
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                if (isPreview && typeof __initial_auth_token !== 'undefined') {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                userId = auth.currentUser?.uid || 'local-user';
-                await window.loadDataCloud();
-                console.log("Connected to Firebase Cloud successfully.");
-                return true;
-            } catch(e) {
-                console.error("Cloud DB Connection Error:", e);
-                window.useLocalFallback = true;
-                await window.loadDataLocal();
-                return false;
-            }
-        };
-
-        window.getCloudDocRef = function(key) {
-            if (isPreview) {
-                return doc(db, 'artifacts', appId, 'users', userId, 'store_data', key);
-            } else {
-                return doc(db, 'prabhat_shop_data', 'main_store', 'collections', key);
-            }
-        };
-
-        window.cloudGetItem = async function(key) {
-            const docSnap = await getDoc(window.getCloudDocRef(key));
-            return docSnap.exists() ? docSnap.data().value : null;
-        };
-
-        window.cloudSetItem = async function(key, value) {
-            await setDoc(window.getCloudDocRef(key), { value: value });
-        };
-    </script>
-    <!-- END BLOCK: FIREBASE SETUP -->
+    <!-- END BLOCK: MODALS & POPUPS -->
 
     <!-- BLOCK: LOGIN SCREEN -->
     <div id="login-screen" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4">
@@ -204,20 +132,21 @@
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
             </div>
             <h1 class="text-3xl font-black text-slate-800 mb-1 tracking-tight">Prabhat<span class="text-teal-600">Shop</span></h1>
-            <p class="text-slate-500 text-xs font-medium mb-8 uppercase tracking-widest">System Access</p>
+            <p class="text-slate-500 text-xs font-medium mb-8 uppercase tracking-widest text-teal-600">Cloud Sync Enabled</p>
             
             <form id="login-form" class="space-y-4">
                 <input type="text" id="username" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none font-medium transition text-sm" placeholder="Username">
                 <input type="password" id="password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none font-medium transition text-sm" placeholder="Password">
                 <div id="login-error" class="text-red-500 text-xs hidden font-bold bg-red-50 p-3 rounded-xl border border-red-100">Invalid Credentials</div>
-                <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3.5 rounded-xl transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm disabled:opacity-75 disabled:cursor-not-allowed">Enter Dashboard</button>
+                <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3.5 rounded-xl transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm">Enter Dashboard</button>
             </form>
         </div>
     </div>
     <!-- END BLOCK: LOGIN SCREEN -->
 
-    <!-- BLOCK: MAIN APP LAYOUT -->
+    <!-- App Layout -->
     <div id="app-container" class="hidden flex-col h-full w-full">
+        <!-- BLOCK: HEADER NAVIGATION -->
         <header class="bg-white border-b border-slate-200 no-print flex-none z-10 shadow-sm relative">
             <div class="max-w-[1600px] mx-auto px-4 lg:px-6 flex flex-col md:flex-row md:justify-between md:items-center pt-3 md:pt-0">
                 <div class="flex justify-between items-center mb-2 md:mb-0 md:h-16">
@@ -245,25 +174,24 @@
                 </div>
             </div>
         </header>
+        <!-- END BLOCK: HEADER NAVIGATION -->
 
         <main class="flex-grow overflow-y-auto p-4 md:p-6 bg-slate-50 custom-scrollbar">
             <div class="max-w-[1600px] mx-auto">
 
-                <!-- TAB: HOME -->
+                <!-- BLOCK: TAB HOME DASHBOARD -->
                 <section id="tab-home" class="tab-content">
                     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-6 gap-4">
                         <div>
                             <h2 class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Shop Dashboard</h2>
-                            <p class="text-slate-500 text-xs md:text-sm mt-1">High-performance analytics. All systems normal.</p>
+                            <p class="text-slate-500 text-xs md:text-sm mt-1 flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Cloud Sync Active. All systems normal.
+                            </p>
                         </div>
                         <div class="flex flex-wrap gap-2 w-full lg:w-auto">
                             <button onclick="exportData()" class="flex-1 lg:flex-none bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-900 transition shadow">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Backup
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Local Backup
                             </button>
-                            <label class="flex-1 lg:flex-none bg-teal-600 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-bold cursor-pointer flex items-center justify-center gap-2 hover:bg-teal-700 transition shadow">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg> Restore
-                                <input type="file" id="import-file" class="hidden" onchange="importData(event)">
-                            </label>
                         </div>
                     </div>
 
@@ -313,8 +241,9 @@
                         </div>
                     </div>
                 </section>
+                <!-- END BLOCK: TAB HOME DASHBOARD -->
 
-                <!-- TAB: USERS -->
+                <!-- BLOCK: TAB USERS -->
                 <section id="tab-users" class="tab-content hidden">
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
                         <div class="lg:col-span-4">
@@ -359,8 +288,9 @@
                         </div>
                     </div>
                 </section>
+                <!-- END BLOCK: TAB USERS -->
 
-                <!-- TAB: MATERIAL MASTER -->
+                <!-- BLOCK: TAB MATERIAL MASTER -->
                 <section id="tab-material" class="tab-content hidden">
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
                         <div class="lg:col-span-4 space-y-6">
@@ -456,8 +386,9 @@
                         </div>
                     </div>
                 </section>
+                <!-- END BLOCK: TAB MATERIAL MASTER -->
 
-                <!-- TAB: GENERATE BILL (Sales) -->
+                <!-- BLOCK: TAB GENERATE BILL (SALES) -->
                 <section id="tab-billing" class="tab-content hidden">
                     <div class="bg-white p-4 md:p-8 rounded-3xl border border-slate-100 shadow-sm mb-8 relative">
                         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-slate-100 pb-4 mb-6 gap-3">
@@ -553,8 +484,9 @@
                         </div>
                     </div>
                 </section>
+                <!-- END BLOCK: TAB GENERATE BILL (SALES) -->
 
-                <!-- BLOCK: PURCHASE TAB -->
+                <!-- BLOCK: TAB PURCHASE INBOUND -->
                 <section id="tab-purchase" class="tab-content hidden">
                     <div class="bg-white p-4 md:p-8 rounded-3xl border border-slate-100 shadow-sm mb-8 relative">
                         <div class="flex border-b border-slate-100 pb-4 mb-6">
@@ -565,6 +497,7 @@
                             <!-- BLOCK: VENDOR SELECTION -->
                             <div class="md:col-span-1">
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 ml-1">Supplier / Vendor</label>
+                                <!-- Notice the event passed here -->
                                 <select id="pur-vendor" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 transition cursor-pointer bg-white font-medium text-sm" onchange="handleVendorChange(event)"></select>
                             </div>
                             <!-- END BLOCK: VENDOR SELECTION -->
@@ -653,9 +586,9 @@
                         </div>
                     </div>
                 </section>
-                <!-- END BLOCK: PURCHASE TAB -->
+                <!-- END BLOCK: TAB PURCHASE INBOUND -->
 
-                <!-- TAB: VENDOR MASTER -->
+                <!-- BLOCK: TAB VENDOR MASTER -->
                 <section id="tab-template" class="tab-content hidden">
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
                         <div class="lg:col-span-4">
@@ -724,8 +657,9 @@
                         </div>
                     </div>
                 </section>
+                <!-- END BLOCK: TAB VENDOR MASTER -->
 
-                <!-- TAB: PAYMENTS & LEDGER -->
+                <!-- BLOCK: TAB PAYMENTS & LEDGER -->
                 <section id="tab-action" class="tab-content hidden">
                     <div class="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
                         
@@ -822,8 +756,9 @@
                         </div>
                     </div>
                 </section>
+                <!-- END BLOCK: TAB PAYMENTS & LEDGER -->
 
-                <!-- TAB: MASTER REPORTS -->
+                <!-- BLOCK: TAB MASTER REPORTS -->
                 <section id="tab-reports" class="tab-content hidden h-full">
                     <div class="no-print max-w-[1600px] mx-auto">
                         <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
@@ -882,27 +817,18 @@
                         </div>
                     </div>
 
-                    <!-- ========================================== -->
-                    <!-- 📝 EDIT YOUR COMPANY DETAILS FOR REPORTS HERE -->
-                    <!-- ========================================== -->
                     <div id="report-template-area" class="bg-white p-6 md:p-12 border border-slate-200 shadow-xl min-h-screen max-w-[1200px] mx-auto rounded-2xl">
-                        
-                        <!-- REPORT HEADER START -->
                         <div class="flex flex-col sm:flex-row justify-between items-start border-b-4 border-slate-800 pb-6 mb-8 gap-4">
                             <div>
                                 <h1 class="text-3xl md:text-4xl font-black text-slate-800 uppercase tracking-tighter">Statement of Accounts</h1>
                                 <p class="text-slate-500 mt-2 text-sm font-medium">Generated: <span id="rep-gen-date" class="text-slate-800"></span></p>
                             </div>
                             <div class="sm:text-right">
-                                <!-- CHANGE COMPANY NAME HERE -->
                                 <h4 class="font-black text-xl tracking-tight text-teal-800">PRABHAT BOOK DEPOT</h4>
-                                <!-- CHANGE ADDRESS HERE -->
                                 <p class="text-sm text-slate-600 font-medium">Sushila Vihar 1 Bhoor, Bulandshahr</p>
-                                <!-- CHANGE PHONE HERE -->
                                 <p class="text-sm text-slate-600 font-medium">Mob.- 9837902200</p>
                             </div>
                         </div>
-                        <!-- REPORT HEADER END -->
 
                         <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
                             <div class="bg-slate-50 p-4 border border-slate-200 rounded-2xl">
@@ -955,7 +881,6 @@
                             </div>
                         </div>
 
-                        <!-- REPORT SIGNATURES -->
                         <div class="flex justify-between mt-32 pt-8 border-t-2 border-slate-200 no-print">
                             <div class="text-center w-40">
                                 <div class="border-b-2 border-slate-800 h-2 mb-3"></div>
@@ -968,26 +893,19 @@
                         </div>
                     </div>
                 </section>
+                <!-- END BLOCK: TAB MASTER REPORTS -->
             </div>
         </main>
     </div>
 
-    <!-- ========================================== -->
-    <!-- 📝 EDIT YOUR COMPANY DETAILS FOR SALES BILL PRINT HERE -->
-    <!-- ========================================== -->
+    <!-- BLOCK: BILL PRINT TEMPLATE -->
     <div id="bill-print-template" class="bg-white p-8 max-w-4xl mx-auto border border-black hidden">
-        
-        <!-- BILL HEADER START -->
         <div class="text-center pb-4 border-b-2 border-black mb-6">
-            <!-- CHANGE COMPANY NAME HERE -->
             <h1 class="text-4xl font-black uppercase text-slate-900 tracking-wider">Prabhat Book Depot</h1>
-            <!-- CHANGE ADDRESS HERE -->
             <p class="text-md text-slate-700 mt-1 font-medium">Sushila Vihar 1 Bhoor, Bulandshahr</p>
-            <!-- CHANGE PHONE HERE -->
             <p class="text-md font-bold text-slate-700">Mob.- 9837902200</p>
             <h2 class="inline-block border-2 border-black px-8 py-2 mt-4 text-xl font-black uppercase bg-slate-100 rounded tracking-widest">Tax Invoice</h2>
         </div>
-        <!-- BILL HEADER END -->
         
         <div class="flex justify-between mb-6 pb-4 border-b border-dashed border-black">
             <div>
@@ -1034,7 +952,6 @@
         </div>
 
         <div class="mt-20 pt-6 border-t border-slate-300 flex justify-between items-end">
-            <!-- BILL TERMS AND CONDITIONS -->
             <div class="text-sm text-slate-600">
                 <p class="font-bold mb-1 underline">Terms & Conditions:</p>
                 <ul class="list-disc pl-5 text-[10px] font-medium space-y-1">
@@ -1048,8 +965,9 @@
             </div>
         </div>
     </div>
+    <!-- END BLOCK: BILL PRINT TEMPLATE -->
 
-    <!-- Document Viewer Modal -->
+    <!-- BLOCK: DOCUMENT VIEWER MODAL -->
     <div id="bill-details-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4 transition-opacity">
         <div class="bg-white rounded-3xl shadow-2xl p-6 md:p-8 w-full max-w-3xl relative max-h-[90vh] overflow-y-auto border border-slate-200 flex flex-col">
             <div class="flex justify-between items-center mb-6 border-b-2 border-slate-100 pb-4">
@@ -1059,12 +977,81 @@
             <div id="bill-details-content" class="flex-grow"></div>
         </div>
     </div>
+    <!-- END BLOCK: DOCUMENT VIEWER MODAL -->
 
-    <script>
-        // --- Naming Collision Fix for window.print ---
-        const execNativePrint = () => {
-            window.print();
+
+    <!-- ========================================================================= -->
+    <!-- BLOCK: FIREBASE CLOUD SYNC SETTINGS                                       -->
+    <!-- ========================================================================= -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrj8GZeIXC2FQLpnQFHos91o8P0RKCIks",
+            authDomain: "prabhatshop-fe8a4.firebaseapp.com",
+            projectId: "prabhatshop-fe8a4",
+            storageBucket: "prabhatshop-fe8a4.firebasestorage.app",
+            messagingSenderId: "18165152659",
+            appId: "1:18165152659:web:48f962ae0638a944788666"
         };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Authenticate before allowing database access
+        window.initFirebaseAuth = async () => {
+            await signInAnonymously(auth);
+        };
+
+        // Fetch data from Cloud
+        window.loadFromFirebase = async (storeObj) => {
+            if (!auth.currentUser) return storeObj;
+            try {
+                const getD = async (name) => {
+                    const snap = await getDoc(doc(db, 'prabhat_shop_data', name));
+                    return snap.exists() ? snap.data().data : null;
+                };
+                
+                const config = await getD('config');
+                if (config) {
+                    storeObj.users = config.users || storeObj.users;
+                    storeObj.categories = config.categories || storeObj.categories;
+                    storeObj.units = config.units || storeObj.units;
+                }
+                const vendors = await getD('vendors'); if(vendors) storeObj.vendors = vendors;
+                const transactions = await getD('transactions'); if(transactions) storeObj.transactions = transactions;
+                const materials = await getD('materials'); if(materials) storeObj.materials = materials;
+                const sales = await getD('sales'); if(sales) storeObj.sales = sales;
+                
+            } catch(e) { console.error("Cloud Load Error:", e); }
+            return storeObj;
+        };
+
+        // Push data to Cloud 
+        window.saveToFirebase = async (storeObj) => {
+            if (!auth.currentUser) return;
+            try {
+                const setD = (name, data) => setDoc(doc(db, 'prabhat_shop_data', name), { data });
+                
+                await Promise.all([
+                    setD('config', { users: storeObj.users, categories: storeObj.categories, units: storeObj.units }),
+                    setD('vendors', storeObj.vendors),
+                    setD('transactions', storeObj.transactions),
+                    setD('materials', storeObj.materials),
+                    setD('sales', storeObj.sales)
+                ]);
+            } catch(e) { console.error("Cloud Save Error:", e); }
+        };
+    </script>
+    <!-- END BLOCK: FIREBASE CLOUD SYNC SETTINGS -->
+
+
+    <!-- BLOCK: MAIN JAVASCRIPT LOGIC -->
+    <script>
+        const execNativePrint = () => { window.print(); };
 
         // --- CUSTOM MODAL CONTROLLERS ---
         let globalModalTimeout = null;
@@ -1109,10 +1096,7 @@
 
         function debounce(func, wait) {
             let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
+            return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); };
         }
 
         // --- DATA STORE ---
@@ -1131,53 +1115,73 @@
         const itemsPerPage = 30, ledgerItemsPerPage = 20, matItemsPerPage = 30;
         let activeLedgerData = [];
 
+        // BLOCK: CLOUD LOAD/SAVE FUNCTIONS
         async function loadData() {
-            try {
-                const sU = await localforage.getItem('vp_users'); const sC = await localforage.getItem('vp_categories');
-                const sUn = await localforage.getItem('vp_units'); const sV = await localforage.getItem('vp_vendors');
-                const sT = await localforage.getItem('vp_transactions'); const sM = await localforage.getItem('vp_materials');
-                const sS = await localforage.getItem('vp_sales');
-                if (sU) store.users = sU; if (sC) store.categories = sC; if (sUn) store.units = sUn;
-                if (sV) store.vendors = sV; if (sT) store.transactions = sT; if (sM) store.materials = sM; if (sS) store.sales = sS;
-            } catch (err) { console.error("Database load error:", err); }
+            if (window.loadFromFirebase) {
+                store = await window.loadFromFirebase(store);
+            }
         }
 
         async function save() {
-            try {
-                await localforage.setItem('vp_users', store.users); await localforage.setItem('vp_categories', store.categories);
-                await localforage.setItem('vp_units', store.units); await localforage.setItem('vp_vendors', store.vendors);
-                await localforage.setItem('vp_transactions', store.transactions); await localforage.setItem('vp_materials', store.materials);
-                await localforage.setItem('vp_sales', store.sales);
-                refreshUI();
-            } catch (err) { console.error("Database save error:", err); }
-        }
-
-        // --- AUTH ---
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault(); await loadData();
-            const u = document.getElementById('username').value.trim(); const p = document.getElementById('password').value.trim();
-            const foundUser = store.users.find(usr => usr.username.toLowerCase() === u.toLowerCase() && usr.password === p);
-
-            if(foundUser) currentUserRole = foundUser.role;
-            else { document.getElementById('login-error').classList.remove('hidden'); return; }
-
-            document.getElementById('login-screen').classList.add('hidden'); document.getElementById('app-container').classList.remove('hidden'); document.getElementById('app-container').classList.add('flex');
-            const badge = document.getElementById('access-badge'), mBadge = document.getElementById('mobile-access-badge');
-            if (currentUserRole === 'admin') {
-                badge.innerText = '🛡️ Admin Active'; mBadge.innerText = 'Admin';
-                badge.className = "text-[10px] bg-red-100 text-red-700 px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider";
-                mBadge.className = "text-[10px] bg-red-100 text-red-700 px-2 py-1 rounded font-bold uppercase tracking-wider";
-                document.getElementById('nav-users').classList.remove('hidden'); document.getElementById('category-section').classList.remove('hidden');
-            } else {
-                badge.innerText = '👤 User Active'; mBadge.innerText = 'User';
-                badge.className = "text-[10px] bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider";
-                mBadge.className = "text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded font-bold uppercase tracking-wider";
-                document.getElementById('nav-users').classList.add('hidden'); document.getElementById('category-section').classList.add('hidden');
+            if (window.saveToFirebase) {
+                await window.saveToFirebase(store);
             }
-            init();
+            refreshUI();
+        }
+        // END BLOCK: CLOUD LOAD/SAVE FUNCTIONS
+
+        // BLOCK: LOGIN AND AUTH
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+            
+            const btn = e.target.querySelector('button[type="submit"]');
+            const origText = btn.innerText;
+            btn.innerText = 'Connecting to Cloud...';
+            btn.disabled = true;
+
+            try {
+                if(window.initFirebaseAuth) await window.initFirebaseAuth();
+                await loadData();
+                
+                const u = document.getElementById('username').value.trim(); 
+                const p = document.getElementById('password').value.trim();
+                const foundUser = store.users.find(usr => usr.username.toLowerCase() === u.toLowerCase() && usr.password === p);
+
+                if(foundUser) currentUserRole = foundUser.role;
+                else { 
+                    document.getElementById('login-error').innerText = "Invalid Credentials";
+                    document.getElementById('login-error').classList.remove('hidden'); 
+                    btn.innerText = origText; btn.disabled = false;
+                    return; 
+                }
+
+                document.getElementById('login-screen').classList.add('hidden'); 
+                document.getElementById('app-container').classList.remove('hidden'); 
+                document.getElementById('app-container').classList.add('flex');
+                
+                const badge = document.getElementById('access-badge'), mBadge = document.getElementById('mobile-access-badge');
+                if (currentUserRole === 'admin') {
+                    badge.innerText = '🛡️ Admin Active'; mBadge.innerText = 'Admin';
+                    badge.className = "text-[10px] bg-red-100 text-red-700 px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider";
+                    mBadge.className = "text-[10px] bg-red-100 text-red-700 px-2 py-1 rounded font-bold uppercase tracking-wider";
+                    document.getElementById('nav-users').classList.remove('hidden'); document.getElementById('category-section').classList.remove('hidden');
+                } else {
+                    badge.innerText = '👤 User Active'; mBadge.innerText = 'User';
+                    badge.className = "text-[10px] bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider";
+                    mBadge.className = "text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded font-bold uppercase tracking-wider";
+                    document.getElementById('nav-users').classList.add('hidden'); document.getElementById('category-section').classList.add('hidden');
+                }
+                init();
+            } catch(error) {
+                console.error(error);
+                document.getElementById('login-error').innerText = "Cloud Connection Error. Check console.";
+                document.getElementById('login-error').classList.remove('hidden'); 
+                btn.innerText = origText; btn.disabled = false;
+            }
         });
 
         function logout() { location.reload(); }
+        // END BLOCK: LOGIN AND AUTH
 
         function exportData() {
             const blob = new Blob([JSON.stringify(store)], {type: 'application/json'}); const url = URL.createObjectURL(blob);
@@ -1209,7 +1213,7 @@
             if(id === 'home') { updateChart(); updateDashTopVendors(); }
         }
 
-        // --- USERS ---
+        // BLOCK: TAB USERS LOGIC
         document.getElementById('user-form').addEventListener('submit', (e) => {
             e.preventDefault(); if(currentUserRole !== 'admin') return;
             superAdminAction(() => {
@@ -1228,8 +1232,9 @@
         function editUser(id) { superAdminAction(() => { const u = store.users.find(x => x.id === id); if(!u) return; document.getElementById('u-name').value = u.username; document.getElementById('u-pass').value = u.password; document.getElementById('u-role').value = u.role; editingUserId = id; document.getElementById('btn-save-user').innerText = 'Update User Details'; }); }
         function deleteUser(id) { if(store.users.length <= 1) { customAlert("Cannot delete the last remaining user!"); return; } superAdminAction(() => { customConfirm("Are you sure you want to delete this user?", () => { store.users = store.users.filter(u => u.id !== id); save(); renderUsersTable(); }); }); }
         function renderUsersTable() { document.getElementById('user-table-body').innerHTML = store.users.map(u => `<tr class="hover:bg-slate-50 transition"><td class="px-4 py-3 font-bold text-slate-700">${u.username}</td><td class="px-4 py-3 font-mono text-slate-500">${u.password}</td><td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold ${u.role === 'admin' ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-slate-100 text-slate-700 border border-slate-200'}">${u.role.toUpperCase()}</span></td><td class="px-4 py-3 text-right"><button onclick="editUser(${u.id})" class="text-blue-600 hover:text-blue-800 font-bold text-xs mx-2 transition">Edit</button><button onclick="deleteUser(${u.id})" class="text-red-500 hover:text-red-700 font-bold text-xs mx-1 transition">Del</button></td></tr>`).join(''); }
+        // END BLOCK: TAB USERS LOGIC
 
-        // --- MATERIALS ---
+        // BLOCK: MATERIAL LOGIC
         function getMaterialStock(code) {
             let stock = 0;
             store.transactions.filter(t => t.type === 'purchase').forEach(tx => { if(tx.items) tx.items.forEach(i => { if(i.name.startsWith(code + ' -')) stock += i.qty; }); });
@@ -1332,7 +1337,6 @@
 
         // --- Quick Material Creation Flow ---
         let pendingFieldToFocus = null;
-        let isCreatingMaterialFromPurchase = false; // Flag to indicate material creation from purchase flow
 
         function checkMissingMaterial(sourceType) {
             const inputId = sourceType === 'bill' ? 'bill-item-search' : 'item-name'; const rawVal = document.getElementById(inputId).value.trim();
@@ -1341,9 +1345,6 @@
             if(!mat) {
                 document.getElementById('qm-raw-name').value = rawVal; document.getElementById('qm-name-display').innerText = rawVal;
                 pendingFieldToFocus = sourceType; 
-                if(sourceType === 'purchase') {
-                    isCreatingMaterialFromPurchase = true;
-                }
                 document.getElementById('quick-material-modal').classList.remove('hidden');
                 document.getElementById('qm-category').value = ''; document.getElementById('qm-gst').value = '0';
             }
@@ -1354,7 +1355,6 @@
             if(pendingFieldToFocus === 'bill') document.getElementById('bill-item-search').value = '';
             if(pendingFieldToFocus === 'purchase') {
                  document.getElementById('item-name').value = '';
-                 isCreatingMaterialFromPurchase = false;
             }
         }
 
@@ -1377,8 +1377,9 @@
             if (pendingFieldToFocus === 'bill') { document.getElementById('bill-item-search').value = fullDesc; autoFillBillItem(); } 
             else if (pendingFieldToFocus === 'purchase') { document.getElementById('item-name').value = fullDesc; autoFillPurchaseItem(); }
         });
+        // END BLOCK: MATERIAL LOGIC
 
-        // --- SALES BILLING ---
+        // BLOCK: SALES BILLING
         function updateNextBillNo() { document.getElementById('display-next-bill-no').innerText = 'INV-' + new Date().getFullYear().toString().substr(-2) + '-' + String(store.sales.length + 1).padStart(4, '0'); }
 
         function autoFillBillItem() {
@@ -1469,8 +1470,9 @@
         }
 
         function triggerBillPrint() { document.body.classList.add('printing-bill'); execNativePrint(); setTimeout(() => { document.body.classList.remove('printing-bill'); }, 500); }
+        // END BLOCK: SALES BILLING
 
-        // --- PURCHASE & VENDORS ---
+        // BLOCK: PURCHASE & VENDORS
         document.getElementById('vendor-form').addEventListener('submit', (e) => {
             e.preventDefault(); if (currentUserRole !== 'admin') { customAlert("Action restricted to Administrators."); return; }
             const vData = { name: document.getElementById('v-name').value, alias: document.getElementById('v-alias').value, contact: document.getElementById('v-contact').value, gst: document.getElementById('v-gst').value, address: document.getElementById('v-address').value, opPur: parseFloat(document.getElementById('v-op-pur').value) || 0, opPaid: parseFloat(document.getElementById('v-op-paid').value) || 0 };
@@ -1489,14 +1491,20 @@
         function deleteVendor(id) { customConfirm('WARNING: Deleting a vendor will permanently erase all associated transactions. Proceed?', () => { store.vendors = store.vendors.filter(v => v.id !== id); store.transactions = store.transactions.filter(t => t.vendorId !== id); save(); customAlert('Vendor deleted.'); }); }
 
         // BLOCK: HANDLE VENDOR CHANGE - MODIFIED
+        let activeVendorSelection = ""; // Tracks actual vendor selection
+
         function handleVendorChange(e) {
-            // Only clear staging if the event was triggered by actual user interaction (change event)
-            // and NOT if it's being restored after material creation
-            if (e && purchaseStaging.length > 0) { 
+            const newVendor = document.getElementById('pur-vendor').value;
+            
+            // e exists only if user manually clicked. If user changes the vendor,
+            // AND there was a previous selection, AND it's different, AND we have staged items: Clear staging.
+            if (e && activeVendorSelection !== "" && activeVendorSelection !== newVendor && purchaseStaging.length > 0) { 
                 purchaseStaging = []; 
                 renderStaging(); 
                 customAlert('Staged items cleared to align with new vendor selection.'); 
             }
+            
+            activeVendorSelection = newVendor;
             autoFillPurchaseItem();
         }
         // END BLOCK: HANDLE VENDOR CHANGE - MODIFIED
@@ -1612,8 +1620,9 @@
             store.transactions.push({ id: Date.now(), vendorId: vId, date: document.getElementById('pur-date').value || new Date().toISOString().split('T')[0], type: 'purchase', billNo: document.getElementById('pur-bill-no').value || 'N/A', items: [...purchaseStaging], amount: totalAmount });
             purchaseStaging = []; document.getElementById('pur-bill-no').value = ''; renderStaging(); save(); customAlert('Inbound Purchase Document Saved & Posted to Ledger.');
         }
+        // END BLOCK: PURCHASE & VENDORS
 
-        // --- PAYMENTS & LEDGER ---
+        // BLOCK: PAYMENTS & LEDGER
         document.getElementById('payment-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const tx = { id: Date.now(), vendorId: document.getElementById('p-vendor').value, date: document.getElementById('p-date').value, type: 'payment', mode: document.getElementById('p-mode').value, slipNo: document.getElementById('p-slip-no').value, amount: parseFloat(document.getElementById('p-amount').value) };
@@ -1637,7 +1646,6 @@
             const startDate = document.getElementById('l-start').value, endDate = document.getElementById('l-end').value;
             if (startDate) vTxs = vTxs.filter(t => t.date >= startDate); if (endDate) vTxs = vTxs.filter(t => t.date <= endDate);
             
-            // Latest to Oldest Sorting Setup (Date and ID precision)
             vTxs.sort((a,b) => {
                 const dDiff = new Date(b.date) - new Date(a.date);
                 return dDiff !== 0 ? dDiff : b.id - a.id; 
@@ -1663,8 +1671,9 @@
                  paginator.classList.remove('hidden'); document.getElementById('l-curr-page').innerText = currentLedgerPage; document.getElementById('l-tot-page').innerText = totalPages; document.getElementById('l-prev').disabled = currentLedgerPage === 1; document.getElementById('l-next').disabled = currentLedgerPage === totalPages;
             }
         }
+        // END BLOCK: PAYMENTS & LEDGER
 
-        // --- DASHBOARDS & CHARTS ---
+        // BLOCK: DASHBOARDS & CHARTS
         function getBal(vId) { const v = store.vendors.find(x => x.id == vId); if(!v) return 0; let p = v.opPur, c = v.opPaid; store.transactions.filter(t => t.vendorId == vId).forEach(t => { if(t.type === 'purchase') p += t.amount; else c += t.amount; }); return p - c; }
 
         function refreshUI() {
@@ -1682,9 +1691,13 @@
             const purVendorSelect = document.getElementById('pur-vendor');
             const selectedPurVendor = purVendorSelect.value;
             purVendorSelect.innerHTML = opts;
+            
+            // Re-select previously active vendor if it still exists
             if (selectedPurVendor && store.vendors.find(v => v.id == selectedPurVendor)) {
                 purVendorSelect.value = selectedPurVendor;
             }
+            // Ensure tracking variable syncs with whatever ended up in the box
+            activeVendorSelection = purVendorSelect.value;
             // END BLOCK: PRESERVE SELECTED VENDOR
             
             document.getElementById('p-vendor').innerHTML = opts;
@@ -1750,8 +1763,9 @@
                 options: { indexAxis: 'y', maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Inter', weight: 'bold' } } } }, scales: { y: { grid: { display: false }, ticks: {font: {family: 'Inter', weight: 'bold', size: 10}} }, x: { grid: { color: '#f1f5f9' } } } }
             });
         }
+        // END BLOCK: DASHBOARDS & CHARTS
 
-        // --- MASTER REPORTS ENGINE ---
+        // BLOCK: MASTER REPORTS ENGINE
         function toggleReportFilter() {
             const type = document.getElementById('rep-filter-type').value; document.querySelectorAll('.rep-filter-group').forEach(el => el.classList.add('hidden'));
             if(type === 'custom') { document.getElementById('filter-custom-start').classList.remove('hidden'); document.getElementById('filter-custom-end').classList.remove('hidden'); } else if (type === 'month') document.getElementById('filter-month').classList.remove('hidden'); else if (type === 'year') document.getElementById('filter-year').classList.remove('hidden');
@@ -1767,7 +1781,6 @@
             const mappedSales = store.sales.map(s => ({ id: s.id, vendorId: 'sales_dummy', custName: s.custName, date: s.date, type: 'sale', billNo: s.invNo, amount: s.totalAmount, items: s.items }));
             let data = vId === 'everything' ? [...store.transactions, ...mappedSales] : vId === 'sales' ? [...mappedSales] : vId === 'all' ? [...store.transactions] : store.transactions.filter(t => t.vendorId == vId);
             
-            // LATEST TO OLDEST LOGIC 
             data.sort((a,b) => {
                 const dDiff = new Date(b.date) - new Date(a.date);
                 return dDiff !== 0 ? dDiff : b.id - a.id; 
@@ -1852,10 +1865,12 @@
                 save(); 
                 if(!document.getElementById('tab-reports').classList.contains('hidden')) runReport(); 
                 if(!document.getElementById('tab-action').classList.contains('hidden')) showActionBalance(); 
-                setTimeout(() => customAlert("Transaction permanently deleted."), 250); // Toast without blocking flow
+                setTimeout(() => customAlert("Transaction permanently deleted."), 250);
             });
         }
+        // END BLOCK: MASTER REPORTS ENGINE
 
+        // BLOCK: PDF AND EXCEL EXPORT LOGIC
         function exportExcel() {
             if (!window.XLSX) { customAlert("Excel Library loading. Try again."); return; }
             let rows = [{ "Date": "-", "Party": "-", "Type": "OPENING BALANCE", "Desc": "-", "Debit (+)": 0, "Credit (-)": 0, "Balance": currentOpeningBal }];
@@ -1872,14 +1887,12 @@
         }
         function prepareAndPrintReport() { document.body.classList.add('printing-report'); execNativePrint(); setTimeout(() => { document.body.classList.remove('printing-report'); }, 500); }
 
-        // --- Document Details Modals & PDF EXPORT ---
         function closeBillDetails() { document.getElementById('bill-details-modal').classList.add('hidden'); }
 
         function generateDocPDF(type, tx, docNo, party) {
              if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') { customAlert("PDF Engine is still loading."); return; }
              const { jsPDF } = window.jspdf; const doc = new jsPDF();
              
-             // Dynamic Company Setup Based on Template DOM (makes changes automatically reflect here)
              const companyName = document.querySelector('#bill-print-template h1').innerText || 'PRABHAT BOOK DEPOT';
              
              doc.setFontSize(18); doc.text(companyName, 14, 22);
@@ -1988,7 +2001,9 @@
             doc.autoTable({ startY: 50, head: [['Date', 'Type', 'Ref/Bill No', 'Mode', 'Debit (Buy)', 'Credit (Pay)', 'Balance']], body: tableRows, theme: 'striped', headStyles: { fillColor: [13, 148, 136] }, styles: { fontSize: 9 } });
             doc.save(`Ledger_${vendor.name.replace(/\s+/g, '_')}.pdf`);
         }
+        // END BLOCK: PDF AND EXCEL EXPORT LOGIC
 
+        // BLOCK: INITIALIZATION
         function init() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('p-date').value = today; document.getElementById('pur-date').value = today; document.getElementById('bill-date').value = today;
@@ -1999,6 +2014,8 @@
             
             refreshUI();
         }
+        // END BLOCK: INITIALIZATION
     </script>
+    <!-- END BLOCK: MAIN JAVASCRIPT LOGIC -->
 </body>
 </html>
